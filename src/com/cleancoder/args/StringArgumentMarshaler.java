@@ -3,16 +3,16 @@ package com.cleancoder.args;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import static com.cleancoder.args.ArgsException.ErrorCode.MISSING_STRING;
+import static com.cleancoder.args.InvalidArgumentException.ErrorCode.MISSING_STRING;
 
 public class StringArgumentMarshaler implements ArgumentMarshaler {
   private String stringValue = "";
 
-  public void set(Iterator<String> currentArgument) throws ArgsException {
+  public void set(Iterator<String> argumentValue, final char argument) {
     try {
-      stringValue = currentArgument.next();
+      stringValue = argumentValue.next();
     } catch (NoSuchElementException e) {
-      throw new ArgsException(MISSING_STRING);
+      throw new InvalidArgumentException(MISSING_STRING, argument);
     }
   }
 

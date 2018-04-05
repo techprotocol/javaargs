@@ -2,14 +2,15 @@ package com.cleancoder.args;
 
 import java.util.*;
 
-import static com.cleancoder.args.ArgsException.ErrorCode.*;
+import static com.cleancoder.args.InvalidSchemaException.ErrorCode.*;
+import static com.cleancoder.args.InvalidArgumentException.ErrorCode.*;
 
 public class Args {
   private Map<Character, ArgumentMarshaler> marshalers;
   private Set<Character> argsFound;
   private ListIterator<String> currentArgument;
 
-  public Args(String schema, String[] args) throws ArgsException {
+  public Args(String schema, String[] args) {
     marshalers = new HashMap<Character, ArgumentMarshaler>();
     argsFound = new HashSet<Character>();
 
@@ -17,13 +18,13 @@ public class Args {
     parseArgumentStrings(Arrays.asList(args));
   }
 
-  private void parseSchema(String schema) throws ArgsException {
+  private void parseSchema(String schema) {
     for (String element : schema.split(","))
       if (element.length() > 0)
         parseSchemaElement(element.trim());
   }
 
-  private void parseSchemaElement(String element) throws ArgsException {
+  private void parseSchemaElement(String element) {
     char elementId = element.charAt(0);
     String elementTail = element.substring(1);
     validateSchemaElementId(elementId);
@@ -40,15 +41,15 @@ public class Args {
     else if (elementTail.equals("&"))
       marshalers.put(elementId, new MapArgumentMarshaler());
     else
-      throw new ArgsException(INVALID_ARGUMENT_FORMAT, elementId, elementTail);
+      throw new InvalidSchemaException(UNSUPPORTED_SCHEMA_TYPE, elementId, elementTail);
   }
 
-  private void validateSchemaElementId(char elementId) throws ArgsException {
+  private void validateSchemaElementId(char elementId) {
     if (!Character.isLetter(elementId))
-      throw new ArgsException(INVALID_ARGUMENT_NAME, elementId, null);
+      throw new InvalidArgumentException(INVALID_ARGUMENT_NAME, elementId);
   }
 
-  private void parseArgumentStrings(List<String> argsList) throws ArgsException {
+  private void parseArgumentStrings(List<String> argsList) {
     for (currentArgument = argsList.listIterator(); currentArgument.hasNext();) {
       String argString = currentArgument.next();
       if (argString.startsWith("-")) {
@@ -60,21 +61,21 @@ public class Args {
     }
   }
 
-  private void parseArgumentCharacters(String argChars) throws ArgsException {
+  private void parseArgumentCharacters(String argChars) {
     for (int i = 0; i < argChars.length(); i++)
       parseArgumentCharacter(argChars.charAt(i));
   }
 
-  private void parseArgumentCharacter(char argChar) throws ArgsException {
+  private void parseArgumentCharacter(char argChar) {
     ArgumentMarshaler m = marshalers.get(argChar);
     if (m == null) {
-      throw new ArgsException(UNEXPECTED_ARGUMENT, argChar, null);
+      throw new InvalidArgumentException(UNEXPECTED_ARGUMENT, argChar);
     } else {
       argsFound.add(argChar);
       try {
-        m.set(currentArgument);
-      } catch (ArgsException e) {
-        e.setErrorArgumentId(argChar);
+        m.set(currentArgument, argChar);
+      } catch (InvalidArgumentException e) {
+        //e.setErrorArgumentId(argChar);
         throw e;
       }
     }
